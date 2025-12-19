@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Alabama State History Quiz</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #0b0f14; color: #e8eef6; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 28px 18px 60px; }
+    header { display:flex; gap:14px; align-items:center; margin-bottom: 18px; }
+    .badge { background:#172233; border:1px solid #2a3b56; padding:6px 10px; border-radius:999px; font-size: 13px; }
+    h1 { margin: 0; font-size: 28px; }
+    p { margin: 10px 0 0; color:#b7c5d6; line-height: 1.4; }
+    .card { background:#101826; border:1px solid #22324a; border-radius: 16px; padding: 16px; margin: 14px 0; }
+    .qtitle { font-weight: 700; margin-bottom: 10px; }
+    .choices { display:grid; gap:10px; }
+    label.choice {
+      display:flex; gap:10px; align-items:flex-start;
+      padding: 10px 12px;
+      border: 1px solid #24344d;
+      border-radius: 12px;
+      background: #0e1624;
+      cursor:pointer;
+    }
+    label.choice:hover { border-color:#35507a; }
+    input[type="radio"] { margin-top: 2px; }
+    .bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top: 18px; }
+    button {
+      border:0; border-radius: 12px; padding: 10px 14px;
+      background: #2e6bff; color:white; font-weight: 700; cursor:pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    button.secondary { background: #1f2b40; border:1px solid #2a3b56; }
+    button:disabled { opacity: .45; cursor:not-allowed; }
+    .result {
+      margin-top: 14px; padding: 14px;
+      border-radius: 14px; border:1px solid #2a3b56;
+      background:#0d1421;
+      display:none;
+    }
+    .result.good { border-color:#2b8a3e; }
+    .result.bad { border-color:#a63a3a; }
+    .codebox {
+      margin-top: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background:#08101c; border:1px dashed #35507a;
+      padding: 10px 12px; border-radius: 12px;
+      display:inline-block;
+    }
+    .tiny { font-size: 13px; color:#b7c5d6; margin-top: 10px; }
+    footer { margin-top: 22px; color:#7f92a9; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge">Quiz Gate</div>
+      <div>
+        <h1>Alabama State History Quiz</h1>
+        <p>Score <strong>9/10</strong> or higher to unlock the code and continue.</p>
+      </div>
+    </header>
+
+    <form id="quiz"></form>
+
+    <div class="bar">
+      <button type="button" id="gradeBtn">Grade Quiz</button>
+      <button type="button" class="secondary" id="resetBtn">Reset</button>
+      <button type="button" id="continueBtn" disabled>Continue to Next Site</button>
+    </div>
+
+    <div id="result" class="result"></div>
+
+    <footer>
+      Tip: host this on GitHub Pages (Settings → Pages → Deploy from branch).
+    </footer>
+  </div>
+
+  <script>
+    // ✅ EDIT ONLY THIS (if you want):
+    const NEXT_URL = "https://amarno3.github.io/puzzlecodes/";
+    const UNLOCK_CODE = "6531"; // change this to your next puzzle code
+
+    const QUESTIONS = [
+      { text: "What year did Alabama become the 22nd state of the United States?",
+        choices: ["1776", "1819", "1861", "1901"], answer: 1 },
+      { text: "Which city is the capital of Alabama?",
+        choices: ["Birmingham", "Mobile", "Montgomery", "Huntsville"], answer: 2 },
+      { text: "Which Native American tribe was forcibly removed from Alabama during the Trail of Tears?",
+        choices: ["Cherokee", "Creek (Muscogee)", "Choctaw", "Seminole"], answer: 1 },
+      { text: "Alabama played a major role in which conflict due to its cotton economy and slave labor system?",
+        choices: ["Revolutionary War", "War of 1812", "Civil War", "World War I"], answer: 2 },
+      { text: "Which Alabama city is considered the birthplace of the Civil Rights Movement?",
+        choices: ["Selma", "Tuskegee", "Birmingham", "Montgomery"], answer: 3 },
+      { text: "The Selma to Montgomery marches were primarily organized to protest which issue?",
+        choices: ["School segregation", "Voting rights discrimination", "Labor conditions", "Housing inequality"], answer: 1 },
+      { text: "Which river is the longest river located entirely within Alabama?",
+        choices: ["Tennessee River", "Tombigbee River", "Alabama River", "Coosa River"], answer: 2 },
+      { text: "Alabama’s economy during the early 1800s was most heavily based on:",
+        choices: ["Mining", "Fishing", "Cotton farming", "Manufacturing"], answer: 2 },
+      { text: "Which amendment to the U.S. Constitution was directly influenced by events in Alabama during the Civil Rights Movement?",
+        choices: ["13th Amendment", "14th Amendment", "15th Amendment", "19th Amendment"], answer: 2 },
+      { text: "Which Alabama city became a major industrial center due to iron and steel production?",
+        choices: ["Mobile", "Huntsville", "Birmingham", "Selma"], answer: 2 }
+    ];
+
+    const PASS_SCORE = 9;
+
+    const quizEl = document.getElementById("quiz");
+    const gradeBtn = document.getElementById("gradeBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const continueBtn = document.getElementById("continueBtn");
+    const resultEl = document.getElementById("result");
+
+    function renderQuiz() {
+      quizEl.innerHTML = "";
+      QUESTIONS.forEach((q, idx) => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const title = document.createElement("div");
+        title.className = "qtitle";
+        title.textContent = `${idx + 1}. ${q.text}`;
+        card.appendChild(title);
+
+        const choices = document.createElement("div");
+        choices.className = "choices";
+
+        q.choices.forEach((c, cidx) => {
+          const label = document.createElement("label");
+          label.className = "choice";
+
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = `q${idx}`;
+          input.value = String(cidx);
+
+          const span = document.createElement("span");
+          span.textContent = c;
+
+          label.appendChild(input);
+          label.appendChild(span);
+          choices.appendChild(label);
+        });
+
+        card.appendChild(choices);
+        quizEl.appendChild(card);
+      });
+    }
+
+    function grade() {
+      let score = 0;
+      let answered = 0;
+
+      QUESTIONS.forEach((q, idx) => {
+        const picked = quizEl.querySelector(`input[name="q${idx}"]:checked`);
+        if (picked) {
+          answered++;
+          if (Number(picked.value) === q.answer) score++;
+        }
+      });
+
+      if (answered < QUESTIONS.length) {
+        resultEl.className = "result bad";
+        resultEl.style.display = "block";
+        resultEl.innerHTML = `
+          <div><strong>Not yet!</strong> You answered ${answered}/${QUESTIONS.length} questions.</div>
+          <div class="tiny">Answer every question, then grade again.</div>
+        `;
+        continueBtn.disabled = true;
+        return;
+      }
+
+      const pass = score >= PASS_SCORE;
+      resultEl.className = "result " + (pass ? "good" : "bad");
+      resultEl.style.display = "block";
+
+      if (pass) {
+        resultEl.innerHTML = `
+          <div><strong>Pass!</strong> You scored <strong>${score}/10</strong>.</div>
+          <div class="tiny">Here’s your code:</div>
+          <div class="codebox">${UNLOCK_CODE}</div>
+          <div class="tiny">Click Continue to move on.</div>
+        `;
+        continueBtn.disabled = false;
+      } else {
+        resultEl.innerHTML = `
+          <div><strong>Try again.</strong> You scored <strong>${score}/10</strong>.</div>
+          <div class="tiny">You need <strong>${PASS_SCORE}/10</strong> to unlock the code.</div>
+        `;
+        continueBtn.disabled = true;
+      }
+    }
+
+    function reset() {
+      quizEl.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+      resultEl.style.display = "none";
+      continueBtn.disabled = true;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    gradeBtn.addEventListener("click", grade);
+    resetBtn.addEventListener("click", reset);
+    continueBtn.addEventListener("click", () => {
+      window.location.href = NEXT_URL;
+    });
+
+    renderQuiz();
+  </script>
+</body>
+</html>

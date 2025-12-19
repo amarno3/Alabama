@@ -41,13 +41,6 @@
     }
     .result.good { border-color:#2b8a3e; }
     .result.bad { border-color:#a63a3a; }
-    .codebox {
-      margin-top: 10px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      background:#08101c; border:1px dashed #35507a;
-      padding: 10px 12px; border-radius: 12px;
-      display:inline-block;
-    }
     .tiny { font-size: 13px; color:#b7c5d6; margin-top: 10px; }
     footer { margin-top: 22px; color:#7f92a9; font-size: 12px; }
   </style>
@@ -58,7 +51,7 @@
       <div class="badge">Quiz Gate</div>
       <div>
         <h1>Alabama State History Quiz</h1>
-        <p>Score <strong>9/10</strong> or higher to unlock the code and continue.</p>
+        <p>Score <strong>9/10</strong> or higher to continue.</p>
       </div>
     </header>
 
@@ -67,20 +60,18 @@
     <div class="bar">
       <button type="button" id="gradeBtn">Grade Quiz</button>
       <button type="button" class="secondary" id="resetBtn">Reset</button>
-      <button type="button" id="continueBtn" disabled>Continue to Next Site</button>
     </div>
 
     <div id="result" class="result"></div>
 
     <footer>
-      Tip: host this on GitHub Pages (Settings → Pages → Deploy from branch).
+      Host on GitHub Pages: Settings → Pages → Deploy from branch (main / root).
     </footer>
   </div>
 
   <script>
-    // ✅ EDIT ONLY THIS (if you want):
     const NEXT_URL = "https://amarno3.github.io/puzzlecodes/";
-    const UNLOCK_CODE = "6531"; // change this to your next puzzle code
+    const PASS_SCORE = 9;
 
     const QUESTIONS = [
       { text: "What year did Alabama become the 22nd state of the United States?",
@@ -105,12 +96,9 @@
         choices: ["Mobile", "Huntsville", "Birmingham", "Selma"], answer: 2 }
     ];
 
-    const PASS_SCORE = 9;
-
     const quizEl = document.getElementById("quiz");
     const gradeBtn = document.getElementById("gradeBtn");
     const resetBtn = document.getElementById("resetBtn");
-    const continueBtn = document.getElementById("continueBtn");
     const resultEl = document.getElementById("result");
 
     function renderQuiz() {
@@ -161,6 +149,7 @@
         }
       });
 
+      // Require all questions answered
       if (answered < QUESTIONS.length) {
         resultEl.className = "result bad";
         resultEl.style.display = "block";
@@ -168,43 +157,37 @@
           <div><strong>Not yet!</strong> You answered ${answered}/${QUESTIONS.length} questions.</div>
           <div class="tiny">Answer every question, then grade again.</div>
         `;
-        continueBtn.disabled = true;
         return;
       }
 
       const pass = score >= PASS_SCORE;
+
       resultEl.className = "result " + (pass ? "good" : "bad");
       resultEl.style.display = "block";
 
       if (pass) {
         resultEl.innerHTML = `
           <div><strong>Pass!</strong> You scored <strong>${score}/10</strong>.</div>
-          <div class="tiny">Here’s your code:</div>
-          <div class="codebox">${UNLOCK_CODE}</div>
-          <div class="tiny">Click Continue to move on.</div>
+          <div class="tiny">Redirecting you to the next site…</div>
         `;
-        continueBtn.disabled = false;
+        // short delay so they see the pass message
+        setTimeout(() => window.location.href = NEXT_URL, 900);
       } else {
         resultEl.innerHTML = `
           <div><strong>Try again.</strong> You scored <strong>${score}/10</strong>.</div>
-          <div class="tiny">You need <strong>${PASS_SCORE}/10</strong> to unlock the code.</div>
+          <div class="tiny">You need <strong>${PASS_SCORE}/10</strong> to continue.</div>
         `;
-        continueBtn.disabled = true;
       }
     }
 
     function reset() {
       quizEl.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
       resultEl.style.display = "none";
-      continueBtn.disabled = true;
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     gradeBtn.addEventListener("click", grade);
     resetBtn.addEventListener("click", reset);
-    continueBtn.addEventListener("click", () => {
-      window.location.href = NEXT_URL;
-    });
 
     renderQuiz();
   </script>
